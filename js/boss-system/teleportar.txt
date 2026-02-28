@@ -1,0 +1,36 @@
+function teleportToBoss(chunkId) {
+    const cfg = getActiveConfig().gameplay;
+    const targetY = chunkId * cfg.chunkHeight;
+
+    // 1. Limpa a memória para não travar o navegador
+    chunks = [];
+    allPlatforms = [];
+    allGems = [];
+    allPowerUps = [];
+    allObstacles = [];
+    allEnemies = [];
+
+    // 2. Move o gerador do mapa lá para baixo
+    nextChunkY = targetY;
+
+    // 3. Move o TARS e a Câmera
+    player.y = targetY + 50; 
+    player.velY = 0;
+    GAME.cameraY = targetY;
+    
+    // 4. Reseta o Boss System para garantir que ele ative
+    if (typeof BossSystem !== 'undefined') BossSystem.reset();
+
+    console.log(`🚀 TARS Teletransportado para o andar do Boss (Chunk ${chunkId})!`);
+}
+
+// ⬇️ ESCOLHA PARA QUAL BOSS QUER IR E DESCOMENTE A LINHA:
+
+// Para ir para o SENTINEL (Tutorial - Chunk 8):
+teleportToBoss(8); 
+
+// Para ir para o PRIMEIRO PROCEDURAL (Chunk 18):
+// teleportToBoss(18); 
+
+// Para ir para o SEGUNDO PROCEDURAL (Chunk 28):
+// teleportToBoss(28);
