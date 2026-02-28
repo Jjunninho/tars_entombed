@@ -298,9 +298,14 @@ window.BossSystem = {
         }
     }
 
-    // ── Fallback de segurança: garante que a morte sempre dispara _handleDefeat
+    // ── Morte do boss abre arena ─────────────────────────────────
     if (boss.hp <= 0 && boss.state !== 'DEAD') {
-        this._handleDefeat(gameState);
+        boss.state = 'DEAD';
+        this.arenaOpen = true;
+
+        if (typeof EntitiesSystem !== 'undefined') {
+            EntitiesSystem.createExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, boss.accentColor, 20);
+        }
     }
 },
 	
@@ -552,6 +557,7 @@ _updateMovement2D(boss, player) {
     _hitBoss(player, gameState) {
         const boss = this.currentBoss;
         boss.hp--;
+        boss.state    = 'HIT';
         boss.hitTimer = 40;
 
         // Bounce do player para cima
@@ -570,11 +576,7 @@ _updateMovement2D(boss, player) {
         console.log(`👊 Boss hit! HP restante: ${boss.hp}`);
 
         if (boss.hp <= 0) {
-            // ✅ Chama _handleDefeat que dá recompensa + seta arenaOpen = true
-            // (não seta DEAD aqui — _handleDefeat cuida disso com delay visual)
-            this._handleDefeat(gameState);
-        } else {
-            boss.state = 'HIT'; // apenas pisca, não morreu ainda
+            boss.state = 'DEAD';
         }
     },
 	

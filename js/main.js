@@ -587,24 +587,39 @@ function update() {
         resolveAntiClipping(allPlatforms);
     }
 
-    // 6. Atualizar Entidades
-    // Boss
-    if (typeof BossSystem !== 'undefined') {
-        BossSystem.update(player, GAME);
+// 6. Atualizar Entidades
+// ─────────────────────────────────────────────
+// Boss
+// ─────────────────────────────────────────────
+if (typeof BossSystem !== 'undefined') {
 
-        // Após derrota: remove plataformas da arena para o player cair
-        if (BossSystem.arenaOpen) {
-            BossSystem.arenaOpen = false; // consome o sinal uma vez
-            const arenaChunk = chunks.find(c => c.id === BossSystem.arenaChunkId);
-            if (arenaChunk) {
-                // Mantém só as paredes laterais (primeiros 2 itens) — remove o chão
-                // Na verdade limpa tudo: o tunnel procedural vem do próximo chunk
-                arenaChunk.platformsCaminhada = [];
-                arenaChunk.platformsAsterisco = [];
-                console.log('🚪 Arena aberta — TARS pode continuar a descida!');
-            }
+    BossSystem.update(player, GAME);
+
+    // Após derrota: remove plataformas da arena para o player cair
+    if (BossSystem.arenaOpen) {
+
+        BossSystem.arenaOpen = false; // consome o sinal uma vez
+
+        // Limpa projéteis remanescentes do boss
+        if (BossSystem.projectiles) {
+            BossSystem.projectiles.length = 0;
+        }
+
+        const arenaChunk = chunks.find(
+            c => c.id === BossSystem.arenaChunkId
+        );
+
+        if (arenaChunk) {
+
+            // Remove chão/plataformas da arena
+            // O próximo chunk procedural assume o túnel
+            arenaChunk.platformsCaminhada = [];
+            arenaChunk.platformsAsterisco = [];
+
+            console.log('🚪 Arena aberta — TARS pode continuar a descida!');
         }
     }
+}
 
     if (typeof EntitiesSystem !== 'undefined') {
         EntitiesSystem.updateGems(allGems, player, GAME);
