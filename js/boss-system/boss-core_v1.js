@@ -268,9 +268,10 @@ window.BossSystem = {
 		}
 
     // ─────────────────────────────────────────────────────────────
-    // COLISÃO BIDIRECIONAL: player toca boss → boss toma dano
-    // (funciona em qualquer direção, pois o boss agora voa)
+    // COLISÃO / DANO NO PLAYER (mantém seu padrão)
     // ─────────────────────────────────────────────────────────────
+    // Você já tinha dano por overlap com shield/recentlyHit.
+    // Aqui só garante que funcione com movimento 2D também.
 
     const hasShield = gameState.activePowerUps?.shield?.active;
     const overlap =
@@ -279,23 +280,15 @@ window.BossSystem = {
         player.y < boss.y + boss.h &&
         player.y + player.height > boss.y;
 
-    // Decrementa cooldown de hit no boss (separado do recentlyHit do player)
-    if (boss._hitCooldown > 0) boss._hitCooldown--;
+    if (overlap && !hasShield && !gameState.recentlyHit && boss.state !== 'DEAD') {
+        // Dano por contato (seu padrão)
+        gameState.health -= 20;
+        gameState.recentlyHit = true;
 
-    if (overlap && boss.state !== 'DEAD') {
-        if (!boss._hitCooldown) {
-            // ✅ Player acerta o boss (de qualquer direção)
-            // _hitBoss já faz: boss.hp--, player.velY = -11 (bounce), som, explosão
-            this._hitBoss(player, gameState);
-            boss._hitCooldown = 50; // ~0.8s — evita dano repetido por ficar encostado
-        } else if (!hasShield && !gameState.recentlyHit) {
-            // Durante o cooldown, se o player ainda está encostado → toma dano de contato
-            gameState.health -= 20;
-            gameState.recentlyHit = true;
-            if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('hit');
-            if (typeof UIController !== 'undefined') UIController.updateHealth(gameState.health);
-            setTimeout(() => { gameState.recentlyHit = false; }, 900);
-        }
+        if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('hit');
+        if (typeof UIController !== 'undefined') UIController.updateHealth(gameState.health);
+
+        setTimeout(() => { gameState.recentlyHit = false; }, 900);
     }
 
     // ── Morte do boss abre arena ─────────────────────────────────
@@ -1109,7 +1102,7 @@ _drawProjectiles(ctx, cameraY) {
         ctx.fillStyle   = '#ff0';
         ctx.font        = 'bold 13px monospace';
         ctx.textAlign   = 'center';
-        ctx.fillText('⚡ TOQUE O BOSS PARA CAUSAR DANO ⚡', 400, screenY - 40);
+        ctx.fillText('▼ PULE NA CABEÇA ▼', 400, screenY - 40);
         ctx.globalAlpha = 1;
         ctx.textAlign   = 'left';
     },
