@@ -439,157 +439,115 @@ _setTargetNearPlayer(boss, player, radiusX, radiusY) {
 },
 
 // Atualiza locomoção 2D do boss procedural (e sentinel em modo leve)
-// Substitua completamente a velha _updateMovement2D por esta:
-
 _updateMovement2D(boss, player) {
-    // 1. LER O DNA PROCEDURAL DO BOSS
-    // Fallback de segurança pro Sentinel que não tem pData procedural
-    if (boss.type === 'sentinel') return; 
-    
-    const dna = boss.pData.locomotion;
+    boss.moveTimer = (boss.moveTimer || 0) + 1;
+    boss.hoverT = (boss.hoverT || 0) + 1;
+
+    // quando expira, troca modo de movimento e escolhe novo target
+    if (boss.moveTimer >= (boss.moveCooldown || 80)) {
+        boss.moveTimer = 0;
+
+        if (boss.type === 'sentinel') {
+            // sentinel: só STRAFE/HOVER leve
+            boss.moveMode = (this._rngNext(boss) < 0.65) ? 'STRAFE' : 'HOVER';
+            boss.moveCooldown = 70 + this._rngInt(boss, 0, 40);
+            this._setTargetNearPlayer(boss, player, 220, 90);
+        } else {
+            boss.moveMode = this._chooseMoveMode(boss, player);
+            boss.moveCooldown = 60 + this._rngInt(boss, 0, 70);
+            this._setTargetNearPlayer(boss, player, 260, 140);
+        }
+    }
+
+    // parâmetros de steering
+    const maxV = (boss.type === 'sentinel')
+        ? (2.6 + boss.phase * 0.4)
+        : (3.4 + boss.phase * 0.6 + boss.speed * 0.15);
+
+    const accel = (boss.type === 'sentinel') ? 0.14 : 0.18;
+    const damp = (boss.type === 'sentinel') ? 0.90 : 0.88;
+
+    // modo específico
     const px = player.x + player.width * 0.5;
     const py = player.y + player.height * 0.5;
     const cx = boss.x + boss.w * 0.5;
     const cy = boss.y + boss.h * 0.5;
 
-    // Limites da Arena
-    const minX = 50, maxX = 750;
-    const minY = this.arenaY + 130, maxY = this.arenaFloorY - boss.h;
+    // bounds
+    const minX = 50;
+    const maxX = 750;
+    const minY = this.arenaY + 130;
+    const maxY = this.arenaFloorY - 150;
 
-    // 2. GRAVIDADE DINÂMICA (Baseada em % de Voo)
-    // Se voar = 1 (100%), gravidade é 0. Se voar = 0%, gravidade alta.
-    const gravity = (1 - dna.voar) * 0.65;
-    boss.vy = (boss.vy || 0) + gravity;
+    if (boss.moveMode === 'ORBIT') {
+        // orbita o player em elipse
+        const a = (boss.hoverT * 0.03) + (boss.attackSeq || 0) * 0.15;
+        const rX = 170 + this._rngRange(boss, -25, 25);
+        const rY = 85 + this._rngRange(boss, -15, 15);
 
-    let onGround = boss.y >= maxY - 5;
-    let onWall = boss.x <= minX + 5 || boss.x >= maxX - boss.w - 5;
+        boss.targetX = this._clamp(px + Math.cos(a) * rX, minX, maxX);
+        boss.targetY = this._clamp(py + Math.sin(a) * rY, minY, maxY);
+    }
+    else if (boss.moveMode === 'DIVE') {
+        // “mergulho” (vai pro player e passa um pouco, depois sobe)
+        const sign = (px > cx) ? 1 : -1;
+        const diveX = px + sign * this._rngRange(boss, 60, 140);
+        const diveY = py + this._rngRange(boss, 30, 90);
 
-    // 3. TARGETING HÍBRIDO (Morder, Atirar, Picar, Grudar)
-    let targetX = px;
-    let targetY = py;
+        boss.targetX = this._clamp(diveX, minX, maxX);
+        boss.targetY = this._clamp(diveY, minY, maxY);
 
-    if (dna.picar && boss.attackTimer < 40) {
-        // Tática Picar: Logo após atirar/atacar, ele foge para trás ou para cima
-        targetX = cx + (cx > px ? 300 : -300);
-        targetY = minY + 50;
-    } else if (dna.morder) {
-        // Tática Morder: Quer encostar em você
-        targetX = px;
-        targetY = py;
-    } else if (dna.atirar) {
-        // Tática Atirador: Mantém distância de 200 a 300px
-        const dx = px - cx;
-        const dist = Math.abs(dx) || 1;
-        if (dist < 250) {
-            targetX = cx - Math.sign(dx) * 150; // Se afasta
-        }
-        targetY = py - 150; // Tenta ficar no alto
+        // reduz amortecimento pra dar sensação de investida
+        // (sem exagerar)
+    }
+    else if (boss.moveMode === 'STRAFE') {
+        // strafe: mantém altura semelhante e varia x
+        const sign = (this._rngNext(boss) < 0.5) ? -1 : 1;
+        boss.targetX = this._clamp(px + sign * this._rngRange(boss, 180, 320), minX, maxX);
+
+        // altura “viva” mas controlada
+        const bob = Math.sin(boss.hoverT * 0.05) * 18;
+        boss.targetY = this._clamp(py - 90 + bob, minY, maxY);
+    }
+    else { // HOVER
+        // pairar: reposiciona perto com leve “bobeira”
+        const bob = Math.sin(boss.hoverT * 0.04) * 16;
+        boss.targetY = this._clamp(boss.targetY + bob * 0.06, minY, maxY);
     }
 
-    if (dna.grudarParede || dna.rastejar) {
-        // Anula a perseguição lateral, tenta ir pra parede mais próxima
-        if (cx < 400) targetX = minX;
-        else targetX = maxX;
+    // steering -> acelera em direção ao target
+    let vx = (boss.vx || 0);
+    let vy = (boss.vy || 0);
+
+    const toX = boss.targetX - cx;
+    const toY = boss.targetY - cy;
+    const d = Math.max(0.001, Math.hypot(toX, toY));
+
+    // desejado
+    const desX = (toX / d) * maxV;
+    const desY = (toY / d) * maxV;
+
+    vx = vx * damp + (desX - vx) * accel;
+    vy = vy * damp + (desY - vy) * accel;
+
+    // clamp de velocidade
+    const vLen = Math.max(0.001, Math.hypot(vx, vy));
+    if (vLen > maxV) {
+        vx = (vx / vLen) * maxV;
+        vy = (vy / vLen) * maxV;
     }
 
-    // 4. MÁQUINA DE AÇÕES (Pular, Investir, Esmagar)
-    // Sorteia ações bruscas se o cooldown permitir
-    boss.actionTimer = (boss.actionTimer || 0) + 1;
-    
-    // _rngNext é sua função de random determinístico do boss-core
-    if (boss.actionTimer > 80) { 
-        const randAct = this._rngNext(boss);
+    boss.vx = vx;
+    boss.vy = vy;
 
-        // A. INVESTIDA (Dash)
-        if (randAct < dna.investir * 0.1) { // 10% da força do status por frame de ação
-            const dist = Math.hypot(px-cx, py-cy) || 1;
-            boss.vx = ((px - cx) / dist) * 14; // Dash rápido
-            boss.vy = ((py - cy) / dist) * 14;
-            boss.actionTimer = 0;
-        }
-        // B. PULAR (Precisa estar apoiado, ou ter altíssimo % de voo)
-        else if (randAct < dna.pulo && (onGround || onWall || dna.voar > 0.8)) {
-            boss.actionTimer = 0;
-            
-            switch(dna.formatoPulo) {
-                case 'parabola': // Pulo do Mario
-                    boss.vy = -12 - (this._rngNext(boss) * 6);
-                    boss.vx = Math.sign(px - cx) * (5 + this._rngNext(boss) * 5);
-                    break;
-                case 'zigzag': // Pulo bugado
-                    boss.vy = -14;
-                    boss.vx = (this._rngNext(boss) > 0.5 ? 12 : -12);
-                    break;
-                case 'quadrado': // Pulo mecânico (Sobe reto)
-                    boss.vy = -18;
-                    boss.vx = 0; 
-                    break;
-                case 'teleporte': // Pulo mágico
-                    boss.x = this._clamp(targetX + (this._rngNext(boss)-0.5)*150, minX, maxX);
-                    boss.y = this._clamp(targetY + (this._rngNext(boss)-0.5)*150, minY, maxY);
-                    if (typeof EntitiesSystem !== 'undefined') {
-                        EntitiesSystem.createExplosion(cx, cy, boss.accentColor, 12);
-                    }
-                    break;
-            }
-        }
-        // C. PULAR EM CIMA (Ground Pound)
-        else if (dna.pularEmCima && !onGround && Math.abs(px - cx) < 100 && cy < py - 60) {
-            boss.vy = 22; // Cai igual bigorna
-            boss.vx = 0;
-            boss.actionTimer = 0;
-        }
-    }
+    // aplica
+    boss.x += vx;
+    boss.y += vy;
 
-    // 5. STEERING (Deslizar em direção ao Alvo)
-    // % de Voar dita quão escorregadio ele é no ar, % Aproximar dita agressividade
-    const accel = (dna.voar * 0.15) + (dna.aproximar * 0.1);
-    const damp = dna.voar > 0.5 ? 0.92 : 0.85;
-
-    let toX = targetX - cx;
-    let toY = targetY - cy;
-    let d = Math.hypot(toX, toY) || 1;
-
-    let desX = (toX / d) * boss.speed;
-    let desY = (toY / d) * boss.speed;
-
-    // Se é Crawler (Rastejador) e está na parede, anula inércia X (só sobe/desce)
-    if (dna.rastejar && onWall) desX = 0; 
-
-    // Se é bicho de chão (não sabe voar) não persegue ativamente no eixo Y (Gravidade resolve)
-    if (dna.voar < 0.3 && !onGround && !dna.rastejar) desY = 0; 
-
-    boss.vx = boss.vx * damp + desX * accel;
-    if (dna.voar > 0.3 || dna.rastejar) {
-        boss.vy = boss.vy * damp + desY * accel;
-    }
-
-    // Limites Terminais de Velocidade
-    boss.vx = this._clamp(boss.vx, -16, 16);
-    boss.vy = this._clamp(boss.vy, -22, 22);
-
-    boss.x += boss.vx;
-    boss.y += boss.vy;
-
-    // 6. RESOLUÇÃO DE COLISÃO COM O CUBÍCULO (Arena)
-    if (boss.x < minX) { boss.x = minX; boss.vx *= -0.5; }
-    if (boss.x > maxX - boss.w) { boss.x = maxX - boss.w; boss.vx *= -0.5; }
-    
-    if (boss.y < minY) { 
-        boss.y = minY; 
-        boss.vy *= -0.5; 
-    }
-    
-    if (boss.y > maxY) {
-        boss.y = maxY;
-        // Se bateu forte no chão e é esmagador, solta o som de impacto!
-        if (boss.vy > 12 && dna.pularEmCima) {
-            if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('land');
-            if (typeof EntitiesSystem !== 'undefined') EntitiesSystem.createExplosion(cx, maxY, '#777', 15);
-        }
-        boss.vy = 0;
-    }
-}
+    // limita arena
+    boss.x = this._clamp(boss.x, minX, maxX - boss.w);
+    boss.y = this._clamp(boss.y, minY, maxY - boss.h);
+},
 
     _hitBoss(player, gameState) {
         const boss = this.currentBoss;

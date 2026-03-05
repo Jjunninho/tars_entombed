@@ -649,8 +649,6 @@
             this.processPoints();
             // Gera estrutura anatômica determinística
             this.bodyData = generateBodyData(new SeededRandom(this.seed + 9999), this.speciesKey);
-			// NOVA LINHA AQUI:
-            this.locomotion = this.generateLocomotionDNA();
         }
         
         generateSpeciesCode() {
@@ -690,36 +688,6 @@
                 };
             });
         }
-		
-		generateLocomotionDNA() {
-        // Usa o PRNG já atrelado à seed do boss para determinismo total
-        const r = this.rng;
-
-        // Algumas tendências naturais só pra não gerar coisas injogáveis, 
-        // mas com alto grau de aleatoriedade!
-        const isFlyer = ['MEDUSA', 'VORTEX', 'FRACTAL', 'SERPENTE'].includes(this.speciesKey);
-        const isHeavy = ['GOLIAS', 'COLMEIA'].includes(this.speciesKey);
-        const isCreepy = ['ARANHA', 'ENXAME', 'FUNGOS'].includes(this.speciesKey);
-
-        return {
-            // PARAMETRIZAÇÕES DE 0 a 100% (0.0 a 1.0) E BOOLEANOS
-            voar: isFlyer ? r.range(0.7, 1.0) : (isHeavy ? r.range(0.0, 0.2) : r.range(0.2, 0.8)),
-            pulo: isHeavy || isCreepy ? r.range(0.5, 1.0) : r.range(0.0, 0.4),
-            formatoPulo: r.choice(['parabola', 'zigzag', 'quadrado', 'teleporte']),
-            
-            grudarParede: isCreepy ? r.bool(0.7) : r.bool(0.2),
-            rastejar: isCreepy ? r.bool(0.6) : r.bool(0.1),
-            
-            atirar: r.bool(0.6),        // Se true, tenta manter distância
-            morder: r.bool(0.4),        // Se true, vai direto pro pescoço do player
-            picar: r.bool(0.3),         // Bate e recua (tática hit and run)
-            
-            investir: r.range(0.1, 0.9), // 0 a 100% chance de dar dash
-            aproximar: r.range(0.2, 1.0), // 0 a 100% agressividade de steering
-            
-            pularEmCima: isHeavy ? r.bool(0.8) : r.bool(0.2) // Esmaga o player
-        };
-    }
         
         animate(p, scale, time) {
             let animX = 0, animY = 0;
