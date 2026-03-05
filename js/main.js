@@ -426,12 +426,26 @@ window.addEventListener('keydown', e => {
     if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
 
+        // 🚨 NOVA TRAVA BLINDADA: Só bloqueia se existir um Boss VIVO na tela!
+        const bossIsAlive = typeof BossSystem !== 'undefined' && 
+                            BossSystem.currentBoss && 
+                            BossSystem.currentBoss.hp > 0;
+
+        if (bossIsAlive) {
+            if (typeof UIController !== 'undefined') {
+                UIController.showNotification('⚠️ BLOQUEADO NO BOSS!', 1000);
+            }
+            if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('hit');
+            return; // Interrompe a função aqui
+        }
+
         // Novos limites (Muito mais justos e focados em Score!)
         const LIMPAR_COOLDOWN_FRAMES = 180; // 3 segundos de recarga (era 5s)
         const CUSTO_SCORE = 1; // Custa 1 pontos em vez de matar o TARS
 
+        // Variáveis de controle de uso
         const cooldownOk = GAME.frameCount >= GAME.limparCooldown;
-        const scoreOk = GAME.score >= CUSTO_SCORE; // Precisa ter pontos para usar
+        const scoreOk = GAME.score >= CUSTO_SCORE;
 
         if (cooldownOk && scoreOk) {
             // Pé do player + pequena margem
@@ -459,7 +473,6 @@ window.addEventListener('keydown', e => {
 
                 if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('transform');
                 if (typeof UIController !== 'undefined') {
-                    // Toca a notificação com a perda de pontos
                     UIController.showNotification(`🔧 BLOCO REMOVIDO (-${CUSTO_SCORE} PTS)`, 1200);
                 }
             } else {
