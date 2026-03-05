@@ -589,6 +589,7 @@ _updateMovement2D(boss, player) {
         }
         boss.vy = 0;
     }
+},
 
     _hitBoss(player, gameState) {
         const boss = this.currentBoss;
