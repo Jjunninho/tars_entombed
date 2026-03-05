@@ -182,8 +182,23 @@ window.BossSystem = {
 		const boss = this.currentBoss;
 
 		// Arena: piso aproximado (se não existir, calcula na hora)
-		// (mantenha sua lógica original se você já seta arenaFloorY em outro lugar)
 		if (!this.arenaFloorY) this.arenaFloorY = this.arenaY + 480;
+
+        // 🟢 COLOQUE A RECUPERAÇÃO AQUI, BEM NO INÍCIO DO UPDATE! 🟢
+		if (boss.state === 'HIT') {
+			boss.hitTimer = (boss.hitTimer || 0) - 1;
+
+			// ainda deixa escorregar um pouco com a inércia
+			boss.x += boss.vx || 0;
+			boss.y += boss.vy || 0;
+			boss.vx *= 0.9;
+			boss.vy *= 0.9;
+
+			if (boss.hitTimer <= 0) {
+				boss.state = 'PATROL';
+				boss.hitTimer = 0;
+			}
+		}
 
 		// Contadores
 		boss.chargeTimer = (boss.chargeTimer || 0) + 1;
@@ -591,8 +606,9 @@ _updateMovement2D(boss, player) {
     }
 },
 
-    _hitBoss(player, gameState) {
+_hitBoss(player, gameState) {
         const boss = this.currentBoss;
+        
         boss.hp--;
         boss.hitTimer = 40;
 
@@ -612,11 +628,9 @@ _updateMovement2D(boss, player) {
         console.log(`👊 Boss hit! HP restante: ${boss.hp}`);
 
         if (boss.hp <= 0) {
-            // ✅ Chama _handleDefeat que dá recompensa + seta arenaOpen = true
-            // (não seta DEAD aqui — _handleDefeat cuida disso com delay visual)
             this._handleDefeat(gameState);
         } else {
-            boss.state = 'HIT'; // apenas pisca, não morreu ainda
+            boss.state = 'HIT'; 
         }
     },
 	
