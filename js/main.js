@@ -426,22 +426,12 @@ window.addEventListener('keydown', e => {
     if (e.key === 'l' || e.key === 'L') {
         e.preventDefault();
 
-        // 🚨 NOVA TRAVA: Bloqueia o uso do "L" durante batalhas de Boss!
-        if (typeof BossSystem !== 'undefined' && BossSystem.active) {
-            if (typeof UIController !== 'undefined') {
-                UIController.showNotification('⚠️ BLOQUEADO NO BOSS!', 1000);
-            }
-            if (typeof AudioSynth !== 'undefined') AudioSynth.playSound('hit'); // Um som de erro ajuda no feedback
-            return; // Interrompe a função aqui, impedindo de apagar o chão!
-        }
-
-// Novos limites (Muito mais justos e focados em Score!)
+        // Novos limites (Muito mais justos e focados em Score!)
         const LIMPAR_COOLDOWN_FRAMES = 180; // 3 segundos de recarga (era 5s)
         const CUSTO_SCORE = 1; // Custa 1 pontos em vez de matar o TARS
 
-        // 🟢 VARIÁVEIS RESTAURADAS AQUI:
         const cooldownOk = GAME.frameCount >= GAME.limparCooldown;
-        const scoreOk = GAME.score >= CUSTO_SCORE;
+        const scoreOk = GAME.score >= CUSTO_SCORE; // Precisa ter pontos para usar
 
         if (cooldownOk && scoreOk) {
             // Pé do player + pequena margem
