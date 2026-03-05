@@ -1,29 +1,22 @@
 // ARQUIVO: js/mobile-joystick.js
-// 🕹️ JOYSTICK VIRTUAL + GIROSCÓPIO PARA TARS ENTOMBED v3.0
-// Eixo deslizante para esquerda/direita, botões de ação e sensor de inclinação!
+// 🕹️ JOYSTICK VIRTUAL PARA TARS ENTOMBED v2.0
+// Eixo deslizante para esquerda/direita + botões de ação
 
 const MobileJoystick = {
     active: false,
 
-    // Estado interno do joystick de toque
+    // Estado interno do joystick
     joystickStartX: 0,
     joystickActive: false,
-    deadzone: 20, // pixels mínimos para ativar direção no toque
-
-    // Estado interno do Giroscópio
-    gyroActive: false,
-    tiltThreshold: 12, // Graus de inclinação para andar
+    deadzone: 20, // pixels mínimos para ativar direção
 
     init() {
         if (!('ontouchstart' in window)) return;
         this.active = true;
-        this.handleOrientation = this.handleOrientation.bind(this); // Prende o escopo
-        
         this.injectStyles();
         this.render();
         this.bindJoystick();
-        this.setupGyro();
-        console.log("🕹️ Mobile Joystick v3.0 (Com Giroscópio) Ativado!");
+        console.log("🕹️ Mobile Joystick v2.0 Ativado!");
     },
 
     injectStyles() {
@@ -61,6 +54,7 @@ const MobileJoystick = {
                 overflow: hidden;
             }
 
+            /* Trilha (track) do eixo */
             .joystick-track {
                 position: absolute;
                 width: 60%;
@@ -69,6 +63,7 @@ const MobileJoystick = {
                 border-radius: 2px;
             }
 
+            /* Setas indicativas */
             .joystick-arrow {
                 position: absolute;
                 font-size: 18px;
@@ -80,6 +75,7 @@ const MobileJoystick = {
             .joystick-arrow.right { right: 10px; }
             .joystick-arrow.active { color: #0ff; }
 
+            /* Bolinha (knob) */
             .joystick-knob {
                 width: 52px;
                 height: 52px;
@@ -167,22 +163,6 @@ const MobileJoystick = {
                 background: rgba(255, 255, 0, 0.4);
                 box-shadow: 0 0 12px rgba(255, 255, 0, 0.7);
             }
-
-            /* Botão GYRO – verde */
-            #btn-gyro {
-                width: 50px;
-                height: 44px;
-                font-size: 12px;
-                border-color: #0f0;
-                color: #0f0;
-                background: rgba(0, 255, 0, 0.12);
-                border-radius: 10px;
-            }
-            #btn-gyro.active {
-                background: rgba(0, 255, 0, 0.4);
-                box-shadow: 0 0 12px rgba(0, 255, 0, 0.7);
-                color: #fff;
-            }
         `;
         document.head.appendChild(style);
     },
@@ -192,6 +172,7 @@ const MobileJoystick = {
         container.className = 'mobile-controls';
         container.id = 'mobileControls';
         container.innerHTML = `
+            <!-- Joystick deslizante (esquerda) -->
             <div class="joystick-zone" id="joystickZone">
                 <div class="joystick-track"></div>
                 <div class="joystick-arrow left"  id="arrowLeft">◀</div>
@@ -199,9 +180,9 @@ const MobileJoystick = {
                 <div class="joystick-knob" id="joystickKnob"></div>
             </div>
 
+            <!-- Botões de ação (direita) -->
             <div class="action-btns">
                 <div class="action-row">
-                    <div class="joy-btn" id="btn-gyro">GYRO</div>
                     <div class="joy-btn" id="btn-l">L</div>
                     <div class="joy-btn" id="btn-space">MODO</div>
                 </div>
@@ -218,86 +199,6 @@ const MobileJoystick = {
         this.bindBtn('btn-l',     'l');
     },
 
-    // ── Giroscópio (Device Orientation) ──────────────────────────
-    setupGyro() {
-        const btn = document.getElementById('btn-gyro');
-        if (!btn) return;
-
-        btn.addEventListener('touchstart', async (e) => {
-            e.preventDefault();
-            
-            if (this.gyroActive) {
-                // Desligar
-                this.gyroActive = false;
-                btn.classList.remove('active');
-                window.removeEventListener('deviceorientation', this.handleOrientation);
-                // Limpa as teclas se soltou
-                if (!this.joystickActive) {
-                    keys['ArrowLeft'] = false;
-                    keys['ArrowRight'] = false;
-                }
-                if (typeof UIController !== 'undefined') UIController.showNotification("GYRO OFF", 800);
-                return;
-            }
-
-            // Ligar (Pede permissão se for iOS 13+)
-            if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
-                try {
-                    const permission = await DeviceOrientationEvent.requestPermission();
-                    if (permission === 'granted') {
-                        this.enableGyro(btn);
-                    } else {
-                        if (typeof UIController !== 'undefined') UIController.showNotification("ACESSO NEGADO", 1500);
-                    }
-                } catch (err) {
-                    console.error("Erro ao solicitar giroscópio:", err);
-                }
-            } else {
-                // Android ou navegadores antigos
-                this.enableGyro(btn);
-            }
-        }, { passive: false });
-    },
-
-    enableGyro(btn) {
-        this.gyroActive = true;
-        btn.classList.add('active');
-        window.addEventListener('deviceorientation', this.handleOrientation);
-        if (typeof UIController !== 'undefined') UIController.showNotification("GYRO ON 📱", 1000);
-    },
-
-    handleOrientation(event) {
-        // 🚨 Se o dedo estiver no joystick da tela, ele manda! Ignora o giroscópio.
-        if (this.joystickActive) return;
-
-        let tilt = 0;
-        
-        // Ajusta o eixo dependendo se a pessoa está jogando com o celular em pé ou deitado
-        const orientation = window.screen.orientation ? window.screen.orientation.type : window.orientation;
-        
-        if (orientation === 'landscape-primary' || orientation === 90) {
-            tilt = event.beta; 
-        } else if (orientation === 'landscape-secondary' || orientation === -90) {
-            tilt = -event.beta;
-        } else {
-            // Celular em pé (retrato)
-            tilt = event.gamma; 
-        }
-
-        // Lógica de Movimento
-        if (tilt > this.tiltThreshold) {
-            keys['ArrowRight'] = true;
-            keys['ArrowLeft']  = false;
-        } else if (tilt < -this.tiltThreshold) {
-            keys['ArrowLeft']  = true;
-            keys['ArrowRight'] = false;
-        } else {
-            // Zona Morta: celular reto = personagem parado
-            keys['ArrowLeft']  = false;
-            keys['ArrowRight'] = false;
-        }
-    },
-
     // ── Joystick deslizante ─────────────────────────────────────
     bindJoystick() {
         const zone  = document.getElementById('joystickZone');
@@ -309,19 +210,14 @@ const MobileJoystick = {
         const knobRange = (zoneW / 2) - 30; // máximo de deslocamento do knob
 
         const reset = () => {
-            this.joystickActive = false;
-            
-            // Só zera as chaves se o giroscópio não estiver ligado ditando as regras
-            if (!this.gyroActive) {
-                keys['ArrowLeft']  = false;
-                keys['ArrowRight'] = false;
-            }
-            
+            keys['ArrowLeft']  = false;
+            keys['ArrowRight'] = false;
             knob.style.left = '50%';
             knob.style.transform = 'translateX(-50%)';
             knob.classList.remove('pressing');
             arrL.classList.remove('active');
             arrR.classList.remove('active');
+            this.joystickActive = false;
         };
 
         const move = (touchX) => {
@@ -345,6 +241,7 @@ const MobileJoystick = {
                 arrR.classList.add('active');
                 arrL.classList.remove('active');
             } else {
+                // Deadzone: para o personagem
                 keys['ArrowLeft']  = false;
                 keys['ArrowRight'] = false;
                 arrL.classList.remove('active');
@@ -354,7 +251,7 @@ const MobileJoystick = {
 
         zone.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            this.joystickActive = true; // Avisa que o dedo entrou (bloqueia o giroscópio)
+            this.joystickActive = true;
             if (typeof AudioSynth !== 'undefined') AudioSynth.init();
             move(e.touches[0].clientX);
         }, { passive: false });
