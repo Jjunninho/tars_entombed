@@ -1,0 +1,635 @@
+/* ============================================================ */
+/* TARS ENTOMBED - CSS REFATORADO v2.0 */
+/* Design: Cyberpunk + Retro Tech */
+/* ============================================================ */
+
+:root {
+    /* Cores Principais */
+    --primary-cyan: #0ff;
+    --primary-green: #0f0;
+    --primary-purple: #a0f;
+    --primary-orange: #f94;
+    
+    /* Cores de Status */
+    --status-ok: #0f0;
+    --status-warning: #ff0;
+    --status-danger: #f00;
+    
+    /* Backgrounds */
+    --bg-dark: #050510;
+    --bg-darker: #020208;
+    --bg-panel: rgba(10, 10, 20, 0.95);
+    --bg-panel-light: rgba(20, 20, 30, 0.9);
+    
+    /* Bordas */
+    --border-color: #333;
+    --border-glow: rgba(0, 255, 255, 0.3);
+    
+    /* Fontes */
+    --font-main: 'Courier New', 'Consolas', monospace;
+    --font-display: 'Impact', 'Arial Black', sans-serif;
+}
+
+/* ============================================================ */
+/* RESET E BASE */
+/* ============================================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: linear-gradient(180deg, var(--bg-darker) 0%, var(--bg-dark) 50%, #0a0a15 100%);
+    color: #eee;
+    font-family: var(--font-main);
+    overflow-x: hidden;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    position: relative;
+	
+}
+
+/* Grid de fundo animado */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes gridScroll {
+    0% { background-position: 0 0; }
+    100% { background-position: 50px 50px; }
+}
+
+/* ============================================================ */
+/* HEADER - LOGO DO JOGO */
+/* ============================================================ */
+
+.game-header {
+    text-align: center;
+    margin-bottom: 20px;
+    position: relative;
+    z-index: 10;
+}
+
+.game-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 8px;
+}
+
+.logo-tars {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: bold;
+    color: var(--primary-cyan);
+    text-shadow: 
+        0 0 20px var(--primary-cyan),
+        0 0 40px rgba(0, 255, 255, 0.5),
+        0 0 60px rgba(0, 255, 255, 0.3);
+    letter-spacing: 8px;
+    animation: titlePulse 3s ease-in-out infinite;
+}
+
+.logo-subtitle {
+    font-family: var(--font-display);
+    font-size: 42px;
+    font-weight: bold;
+    color: var(--primary-orange);
+    text-shadow: 
+        0 0 15px var(--primary-orange),
+        0 0 30px rgba(255, 153, 68, 0.5);
+    letter-spacing: 6px;
+}
+
+.game-tagline {
+    font-size: 14px;
+    color: #888;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    font-weight: 300;
+}
+
+@keyframes titlePulse {
+    0%, 100% { 
+        text-shadow: 
+            0 0 20px var(--primary-cyan),
+            0 0 40px rgba(0, 255, 255, 0.5);
+    }
+    50% { 
+        text-shadow: 
+            0 0 30px var(--primary-cyan),
+            0 0 60px rgba(0, 255, 255, 0.8),
+            0 0 80px rgba(0, 255, 255, 0.4);
+    }
+}
+
+/* ============================================================ */
+/* SELETOR DE DIFICULDADE */
+/* ============================================================ */
+
+.difficulty-selector {
+    background: var(--bg-panel);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 15px 25px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    z-index: 10;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.diff-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 20px;
+    background: rgba(30, 30, 40, 0.8);
+    border: 2px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: var(--font-main);
+    color: #aaa;
+    min-width: 90px;
+}
+
+.diff-btn:hover {
+    background: rgba(50, 50, 60, 0.9);
+    border-color: var(--primary-cyan);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 255, 255, 0.3);
+}
+
+.diff-btn.active {
+    background: linear-gradient(135deg, rgba(0, 255, 255, 0.2), rgba(0, 200, 200, 0.1));
+    border-color: var(--primary-cyan);
+    color: var(--primary-cyan);
+    box-shadow: 
+        0 0 20px rgba(0, 255, 255, 0.4),
+        inset 0 0 15px rgba(0, 255, 255, 0.1);
+}
+
+.diff-icon {
+    font-size: 20px;
+    filter: drop-shadow(0 0 8px currentColor);
+}
+
+.diff-name {
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* ============================================================ */
+/* CONTAINER DO JOGO */
+/* ============================================================ */
+
+.game-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    position: relative;
+    z-index: 10;
+}
+
+/* ============================================================ */
+/* PAINEL DE ESTATÍSTICAS */
+/* ============================================================ */
+
+.ui-panel {
+    display: flex;
+    gap: 30px;
+    background: var(--bg-panel);
+    padding: 15px 35px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    box-shadow: 
+        0 4px 20px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ui-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+}
+
+.ui-label {
+    font-size: 10px;
+    color: #666;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.ui-value {
+    font-size: 22px;
+    font-weight: bold;
+    color: #ddd;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+/* Cores especiais para valores */
+.green-text {
+    color: var(--primary-green);
+    text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+}
+
+.cyan-text {
+    color: var(--primary-cyan);
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.purple-text {
+    color: var(--primary-purple);
+    text-shadow: 0 0 10px rgba(160, 0, 255, 0.5);
+}
+
+/* ============================================================ */
+/* CONTROLES DE MODO (CAMINHADA/ASTERISCO) */
+/* ============================================================ */
+
+.mode-toggle {
+    display: flex;
+    gap: 12px;
+    background: var(--bg-panel);
+    padding: 12px 25px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+}
+
+.mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 25px;
+    background: rgba(30, 30, 40, 0.8);
+    border: 2px solid #444;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: var(--font-main);
+    font-size: 14px;
+    color: #888;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+.mode-btn:hover {
+    background: rgba(50, 50, 60, 0.9);
+    border-color: var(--primary-green);
+    transform: scale(1.05);
+}
+
+.mode-btn.active {
+    background: linear-gradient(135deg, rgba(0, 255, 0, 0.2), rgba(0, 200, 0, 0.1));
+    border-color: var(--primary-green);
+    color: var(--primary-green);
+    box-shadow: 
+        0 0 20px rgba(0, 255, 0, 0.3),
+        inset 0 0 15px rgba(0, 255, 0, 0.1);
+}
+
+.mode-icon {
+    font-size: 20px;
+}
+
+.mode-text {
+    flex: 1;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+
+/* ============================================================ */
+/* CANVAS DO JOGO */
+/* ============================================================ */
+
+canvas {
+    border: 3px solid var(--border-color);
+    border-radius: 4px;
+    background-color: #000;
+    box-shadow: 
+        0 0 50px rgba(0, 0, 0, 0.8),
+        0 0 100px rgba(0, 255, 255, 0.1),
+        inset 0 0 20px rgba(0, 255, 255, 0.05);
+}
+
+/* ============================================================ */
+/* CONTROLES (TECLADO) */
+/* ============================================================ */
+
+.controls {
+    background: var(--bg-panel-light);
+    padding: 12px 25px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.control-row {
+    font-size: 13px;
+    color: #aaa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.control-key {
+    background: rgba(0, 255, 0, 0.1);
+    color: var(--primary-green);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.control-separator {
+    color: #444;
+    font-weight: bold;
+}
+
+/* ============================================================ */
+/* INFORMAÇÕES ADICIONAIS */
+/* ============================================================ */
+
+.game-info {
+    display: flex;
+    gap: 30px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+}
+
+.info-item {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.info-label {
+    color: #666;
+    font-weight: bold;
+}
+
+.info-value {
+    color: #aaa;
+}
+
+.status-ok {
+    color: var(--status-ok);
+    text-shadow: 0 0 5px var(--status-ok);
+}
+
+.status-warning {
+    color: var(--status-warning);
+    text-shadow: 0 0 5px var(--status-warning);
+}
+
+.status-danger {
+    color: var(--status-danger);
+    text-shadow: 0 0 5px var(--status-danger);
+}
+
+/* ============================================================ */
+/* NOTIFICAÇÕES E OVERLAYS */
+/* ============================================================ */
+
+.mode-notification {
+    position: fixed;
+    top: 80px;
+    left: 20px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid var(--primary-cyan);
+    border-radius: 6px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 100;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.mode-notification.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.notif-icon {
+    font-size: 16px;
+}
+
+.notif-text {
+    font-size: 12px;
+    color: var(--primary-cyan);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* ============================================================ */
+/* BADGE ENTOMBED */
+/* ============================================================ */
+
+.entombed-badge {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid var(--primary-orange);
+    border-radius: 8px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 100;
+    animation: badgePulse 3s infinite;
+}
+
+.badge-icon {
+    font-size: 24px;
+}
+
+.badge-text {
+    font-size: 10px;
+    color: var(--primary-orange);
+    font-weight: bold;
+    letter-spacing: 1px;
+    line-height: 1.4;
+    text-shadow: 0 0 8px var(--primary-orange);
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        box-shadow: 0 0 15px rgba(255, 153, 68, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 30px rgba(255, 153, 68, 0.6);
+    }
+}
+
+/* ============================================================ */
+/* COOLDOWN BAR */
+/* ============================================================ */
+
+.cooldown-bar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 200px;
+    height: 8px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s;
+    z-index: 100;
+}
+
+.cooldown-bar.active {
+    opacity: 1;
+}
+
+.cooldown-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--status-warning), var(--status-ok));
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 10px var(--status-warning);
+}
+
+/* ============================================================ */
+/* RESPONSIVIDADE */
+/* ============================================================ */
+
+@media (max-width: 900px) {
+    .game-logo {
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .logo-tars {
+        font-size: 42px;
+    }
+    
+    .logo-subtitle {
+        font-size: 32px;
+    }
+    
+    .ui-panel {
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .difficulty-buttons {
+        flex-wrap: wrap;
+    }
+    
+    canvas {
+        max-width: 100%;
+        height: auto;
+    }
+}
+
+
+	/* Container da Semente */
+	.seed-container {
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		background: rgba(0, 0, 0, 0.3);
+		border: 1px solid var(--border-color);
+		border-radius: 4px;
+		padding: 2px 5px;
+	}
+
+	.seed-input {
+		background: transparent;
+		border: none;
+		color: var(--primary-orange);
+		font-family: var(--font-main);
+		font-size: 16px;
+		font-weight: bold;
+		width: 80px;
+		outline: none;
+		text-align: center;
+	}
+
+	/* Remover setas do input number */
+	.seed-input::-webkit-inner-spin-button, 
+	.seed-input::-webkit-outer-spin-button { 
+		-webkit-appearance: none; 
+		margin: 0; 
+	}
+
+	.seed-btn {
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		font-size: 14px;
+		filter: grayscale(1);
+		transition: transform 0.2s, filter 0.2s;
+	}
+
+	.seed-btn:hover {
+		transform: scale(1.2);
+		filter: grayscale(0);
+	}
+
+/* ============================================================ */
+/* ANIMAÇÕES EXTRAS */
+/* ============================================================ */
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-container > * {
+    animation: fadeInUp 0.5s ease-out backwards;
+}
+
+.game-container > *:nth-child(1) { animation-delay: 0.1s; }
+.game-container > *:nth-child(2) { animation-delay: 0.2s; }
+.game-container > *:nth-child(3) { animation-delay: 0.3s; }
+.game-container > *:nth-child(4) { animation-delay: 0.4s; }
+.game-container > *:nth-child(5) { animation-delay: 0.5s; }

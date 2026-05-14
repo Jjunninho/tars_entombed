@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TARS Entombed - Descida Infinita</title>
+    <link rel="stylesheet" href="css/tars_game.css">
+	<link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+
+    <div class="game-header">
+        <div class="game-logo">
+            <div class="logo-tars">TARS</div>
+            <div class="logo-subtitle">ENTOMBED</div>
+        </div>
+        <div class="game-tagline">Descida Infinita • Algoritmo Atari 2600</div>
+    </div>
+
+    <div class="game-container">
+        
+        <div class="difficulty-selector">
+            <div class="difficulty-buttons">
+                <button class="diff-btn" data-difficulty="EASY">
+                    <span class="diff-icon">🟢</span>
+                    <span class="diff-name">FÁCIL</span>
+                </button>
+                <button class="diff-btn active" data-difficulty="NORMAL">
+                    <span class="diff-icon">🟡</span>
+                    <span class="diff-name">NORMAL</span>
+                </button>
+                <button class="diff-btn" data-difficulty="HARD">
+                    <span class="diff-icon">🟠</span>
+                    <span class="diff-name">DIFÍCIL</span>
+                </button>
+                <button class="diff-btn" data-difficulty="CREATIVE">
+                    <span class="diff-icon">🎨</span>
+                    <span class="diff-name">CRIATIVO</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="mode-toggle">
+            <button class="mode-btn active" id="walkBtn">
+                <span class="mode-icon">🚶</span>
+                <span class="mode-text">CAMINHADA</span>
+            </button>
+            <button class="mode-btn" id="rollBtn">
+                <span class="mode-icon">✨</span>
+                <span class="mode-text">ASTERISCO</span>
+            </button>
+        </div>
+		
+		<!-- Tela principal do jogo --!>
+		
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        
+		<div class="ui-panel">
+			<div class="ui-stat">
+				<div class="ui-label">SEMENTE (SEED)</div>
+				<div class="seed-container">
+					<input type="number" id="seedInput" class="seed-input" value="000000">
+					<button id="applySeedBtn" class="seed-btn" title="Aplicar Semente">✔️</button>
+				</div>
+			</div>
+			
+			<div class="ui-stat">
+				<div class="ui-label">PROFUNDIDADE</div>
+				<div class="ui-value green-text" id="depthDisplay">0m</div>
+			</div>
+			<div class="ui-stat">
+				<div class="ui-label" style="color: var(--primary-orange);">RECORDE</div>
+				<div class="ui-value orange-text" id="highScoreDisplay">000000</div>
+			</div>
+			<div class="ui-stat">
+				<div class="ui-label">INTEGRIDADE</div>
+				<div class="ui-value" id="healthDisplay" style="color: #f00;">❤️❤️❤️</div>
+			</div>
+			<div class="ui-stat">
+				<div class="ui-label">MODO ATUAL</div>
+				<div class="ui-value" id="modeDisplay" style="color: #0ff;">CAMINHADA</div>
+			</div>
+			<div class="ui-stat">
+				<div class="ui-label">CHUNKS</div>
+				<div class="ui-value purple-text" id="chunksDisplay">0</div>
+			</div>
+		
+		</div>
+        
+        <div class="controls">
+            <div class="control-row">
+                <span class="control-key">←/→</span> Mover
+                <span class="control-separator">•</span>
+                <span class="control-key">↑</span> Pular
+                <span class="control-separator">•</span>
+                <span class="control-key">ESPAÇO</span> Trocar Modo
+                <span class="control-separator">•</span>
+                <span class="control-key">R</span> Reiniciar
+				<span class="control-key">L</span> Limpar Bloco
+            </div>
+        </div>
+
+        <div class="game-info">
+            <div class="info-item">
+                <span class="info-label">Engine:</span>
+                <span class="info-value">Entombed Procedural v2.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">FPS:</span>
+                <span class="info-value" id="fpsDisplay">60</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Status:</span>
+                <span class="info-value status-ok" id="statusDisplay">ATIVO</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mode-notification" id="modeNotification">
+        <div class="notif-icon">🔄</div>
+        <div class="notif-text">MODO ALTERADO</div>
+    </div>
+
+    <div class="entombed-badge">
+        <div class="badge-icon">🎮</div>
+        <div class="badge-text">ENTOMBED<br>ENGINE</div>
+    </div>
+
+    <div class="cooldown-bar" id="cooldownBar">
+        <div class="cooldown-fill" id="cooldownFill"></div>
+    </div>
+	<!-- Script para centralizar a tela --!>
+	<script>
+			window.addEventListener("keydown", function(e) {
+			// Lista das teclas que causam scroll na página
+			const keysToBlock = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
+			
+			if (keysToBlock.includes(e.key)) {
+				e.preventDefault(); // Impede o scroll da página
+			}
+		}, false);
+	</script>
+	
+<script src="js/biomes-data.js"></script>
+
+<script src="js/entities/utils.js"></script>
+<script src="js/entities/particles.js"></script>
+<script src="js/entities/gems.js"></script>
+<script src="js/entities/powerups.js"></script>
+<script src="js/entities/obstacles.js"></script>
+<script src="js/entities/enemies.js"></script>
+<script src="js/entities/decorations.js"></script>
+
+<script src="js/entities-system.js"></script>
+
+<script src="js/boss-system/boss-sentinel.js"></script>
+<script src="js/boss-system/boss-procedural.js"></script>
+<script src="js/boss-system/boss-renderer.js"></script>
+<script src="js/boss-system/boss-core.js"></script>
+
+<script src="js/ai/ai-recorder.js"></script>
+<script src="js/ai/ai-brain.js"></script>
+<script src="js/ai/ai-controller.js"></script>
+
+<script src="js/audio-synth.js"></script>
+<script src="js/entombed-core.js"></script>
+<script src="js/character.js"></script>
+<script src="js/game-config.js"></script>
+<script src="js/ui-controller.js"></script>
+<script src="js/main.js"></script>
+<script src="js/debug-health.js"></script>
+
+</body>
+</html>
